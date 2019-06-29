@@ -39,20 +39,21 @@ async function parse(file) {
 
 function getWPAuthor(comment) {
     return [
-        'wordpress',
-        comment['wp:comment_author'],
-        comment['wp:comment_author'],
-        comment['wp:comment_author'],
-        0
+        'old',
+        comment['wp:comment_author_id'],
+        comment['wp:comment_author'].trim(),
+        comment['wp:comment_author'].trim(),
+        '',
+        1
     ];
 }
 
 function getWPComment(thread, comment) {
     return [
-        thread['wp:post_name'],
+        thread['dsq:thread_identifier'],
         comment['wp:comment_content'],
         comment['wp:comment_parent'],
-        comment['wp:comment_date'],
+        comment['wp:comment_date_gmt'],
         comment['wp:comment_approved']
     ];
 }
@@ -65,8 +66,26 @@ function formatWPComment(comment, thread) {
     };
 }
 
+function rebuildWP(threads) {
+  const result = {};
+
+  for (let thread of threads) {
+    if (result[thread['dsq:thread_identifier']]) {
+      result[thread['dsq:thread_identifier']]['wp:comment'].push(thread['wp:comment']);
+    }
+    else {
+      const obj = Object.assign({}, thread);
+      obj['wp:comment'] = [obj['wp:comment']];
+      result[thread['dsq:thread_identifier']] = obj;
+    }
+  }
+
+  return Object.values(result);
+}
+
 async function parseWP(data) {
-    const threads = data.rss.channel.item;
+    const threads = rebuildWP(data.rss.channel.item);
+
     for (let thread of threads) {
         const comments = thread['wp:comment'];
         if (comments) {
@@ -86,13 +105,21 @@ async function saveComment(post) {
     const { comment, author } = post;
 
     if (!author[1]) {
-        author[1] = 'Anonymous Guest';
+        const nickname = '网友';
+        author[1] = nickname;
+        author[2] = nickname;
+        author[3] = nickname;
     }
 
     try {
-        await db.run(queries.create_user, author);
         const newUser = await db.get(queries.find_user, [author[0], author[1]]);
-        if (newUser.id) comment.unshift(newUser.id); // push user_id to the front
+        if (newUser && newUser.id) {
+          comment.unshift(newUser.id); // push user_id to the front
+        }
+        else {
+          const res = await db.run(queries.create_user, author);
+          comment.unshift(res.lastID);
+        }
         const res = await db.run(
             `INSERT INTO comment
         (user_id, slug, comment, reply_to, created_at, approved, rejected)
@@ -150,7 +177,8 @@ async function run() {
     try {
         const filePath = path.resolve(__dirname, '..', filename);
         const content = await readFile(filePath);
-        const result = await parse(content);
+        // const result = await parse(content);
+        const result = JSON.parse(content);
 
         if (result.disqus) {
             parseDisqus(result);
