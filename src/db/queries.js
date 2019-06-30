@@ -36,7 +36,7 @@ module.exports = {
 
     insert: `INSERT INTO comment
       (user_id, slug, comment, reply_to, created_at, approved, rejected)
-      VALUES (?,?,?,?,datetime(),0,0)`,
+      VALUES (?,?,?,?,datetime('now','localtime'),0,0)`,
 
     find_user: `SELECT id, name, display_name, provider, provider_id,
          trusted, blocked FROM user
@@ -45,7 +45,7 @@ module.exports = {
     create_user: `INSERT INTO user
       (provider, provider_id, display_name, name, url,
        created_at, trusted, blocked)
-      VALUES (?, ?, ?, ?, ?, datetime(), ?, 0)`,
+      VALUES (?, ?, ?, ?, ?, datetime('now','localtime'), ?, 0)`,
 
     set_settings: `INSERT OR REPLACE INTO setting (name, active)
       VALUES (?, ?)`,
@@ -66,5 +66,5 @@ module.exports = {
 
     create_oauth_provider: `INSERT INTO oauth_provider
       (provider, domain, provider_app_id, client_id, client_secret, created_at)
-      VALUES (?, ?, ?, ?, ?, datetime())`
+      VALUES (?, ?, ?, ?, ?, datetime('now','localtime'))`
 };
