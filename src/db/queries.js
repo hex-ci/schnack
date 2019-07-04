@@ -17,6 +17,13 @@ module.exports = {
         AND NOT comment.rejected
       ORDER BY comment.created_at DESC`,
 
+    admin_get_comment: `SELECT id, user_id, created_at, comment
+      FROM comment
+      WHERE id = ?`,
+
+    admin_set_comment: `UPDATE comment SET comment = ?
+      WHERE id = ?`,
+
     get_last_comment: `SELECT comment, user_id FROM comment WHERE slug = ?
       ORDER BY comment.created_at DESC LIMIT 1`,
 
@@ -37,6 +44,9 @@ module.exports = {
     insert: `INSERT INTO comment
       (user_id, slug, comment, reply_to, created_at, approved, rejected)
       VALUES (?,?,?,?,datetime('now','localtime'),0,0)`,
+
+    remove: `DELETE FROM comment
+      WHERE id = ?`,
 
     find_user: `SELECT id, name, display_name, provider, provider_id,
          trusted, blocked FROM user

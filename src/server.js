@@ -82,34 +82,45 @@ function run(db) {
     // POST new comment
     app.post('/comments/:slug', (request, reply) => {
         const { slug } = request.params;
-        const { comment, replyTo } = request.body;
+        const { comment, replyTo, editId } = request.body;
         const user = getUser(request);
 
         if (!user) return error('access denied', request, reply, 403);
-        checkValidComment(db, slug, user.id, comment, replyTo, err => {
-            if (err) return reply.send({ status: 'rejected', reason: err });
-            let stmt = db
-                .prepare(queries.insert, [user.id, slug, comment, replyTo ? +replyTo : null])
-                .run(err => {
-                    if (err) return error(err, request, reply);
-                    if (!user.blocked && !user.trusted) {
-                        awaiting_moderation.push({ slug });
-                    }
-                    schnackEvents.emit('new-comment', {
-                        user: user,
-                        slug,
-                        id: stmt.lastID,
-                        comment,
-                        replyTo
+
+        if (Number(editId) > 0) {
+            if (!isAdmin(user)) return reply.status(403).send({ error: 'Forbidden' });
+
+            db.run(queries.admin_set_comment, [comment, editId], err => {
+                if (error(err, request, reply)) return;
+                reply.send({ status: 'ok', id: editId });
+            });
+        }
+        else {
+            checkValidComment(db, slug, user.id, comment, replyTo, err => {
+                if (err) return reply.send({ status: 'rejected', reason: err });
+                let stmt = db
+                    .prepare(queries.insert, [user.id, slug, comment, replyTo ? +replyTo : null])
+                    .run(err => {
+                        if (err) return error(err, request, reply);
+                        if (!user.blocked && !user.trusted) {
+                            awaiting_moderation.push({ slug });
+                        }
+                        schnackEvents.emit('new-comment', {
+                            user: user,
+                            slug,
+                            id: stmt.lastID,
+                            comment,
+                            replyTo
+                        });
+                        reply.send({ status: 'ok', id: stmt.lastID });
                     });
-                    reply.send({ status: 'ok', id: stmt.lastID });
-                });
-        });
+            });
+        }
     });
 
     // trust/block users or approve/reject comments
     app.post(
-        /\/(?:comment\/(\d+)\/(approve|reject))|(?:user\/(\d+)\/(trust|block))/,
+        /\/(?:comment\/(\d+)\/(approve|reject|remove))|(?:user\/(\d+)\/(trust|block))/,
         (request, reply) => {
             const user = getUser(request);
             if (!isAdmin(user)) return reply.status(403).send(request.params);
@@ -176,6 +187,17 @@ function run(db) {
         db.run(queries.set_settings, [property, setting], err => {
             if (error(err, request, reply)) return;
             reply.send({ status: 'ok' });
+        });
+    });
+
+    app.get(/\/get_comment\/(\d+)/, (request, reply) => {
+        const user = getUser(request);
+        if (!isAdmin(user)) return reply.status(403).send({ error: 'Forbidden' });
+        const target_id = request.params[0];
+
+        db.get(queries.admin_get_comment, target_id, (err, comment) => {
+            if (error(err, request, reply)) return;
+            reply.send({ user, comment });
         });
     });
 

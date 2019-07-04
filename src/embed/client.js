@@ -53,6 +53,7 @@ export default class Schnack {
                 const writeBtn = $(target + ' .schnack-write');
                 const cancelReplyBtn = $(target + ' .schnack-cancel-reply');
                 const replyBtns = $$(target + ' .schnack-reply');
+                const editBtns = $$(target + ' .schnack-edit');
 
                 if (postBtn) {
                     postBtn.addEventListener('click', d => {
@@ -65,7 +66,8 @@ export default class Schnack {
                             },
                             body: JSON.stringify({
                                 comment: body,
-                                replyTo: form.dataset.reply
+                                replyTo: form.dataset.reply,
+                                editId: form.dataset.edit
                             })
                         })
                             .then(r => r.json())
@@ -119,6 +121,7 @@ export default class Schnack {
 
                     replyBtns.forEach(btn => {
                         btn.addEventListener('click', () => {
+                            delete form.dataset.edit;
                             form.dataset.reply = btn.dataset.replyTo;
                             cancelReplyBtn.style.display = 'inline-block';
                             btn.parentElement.appendChild(form);
@@ -128,7 +131,33 @@ export default class Schnack {
                     cancelReplyBtn.addEventListener('click', () => {
                         above.appendChild(form);
                         delete form.dataset.reply;
+                        delete form.dataset.edit;
                         cancelReplyBtn.style.display = 'none';
+                    });
+
+                    editBtns.forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const data = btn.dataset;
+                            fetch(`${host}/get_comment/${data.target}`, {
+                                credentials: 'include',
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                                .then(r => r.json())
+                                .then((res) => {
+                                    const el = btn.parentElement;
+
+                                    delete form.dataset.reply;
+
+                                    form.dataset.edit = data.target;
+                                    textarea.value = res.comment.comment;
+                                    cancelReplyBtn.style.display = 'inline-block';
+
+                                    el.insertBefore(form, el.querySelector('.schnack-body').nextSibling);
+                                });
+                        });
                     });
                 }
                 if (data.user) {
@@ -201,6 +230,9 @@ export default class Schnack {
                     }
 
                     const action = evt => {
+                        if (!confirm('确认吗？')) {
+                            return;
+                        }
                         const btn = evt.target;
                         const data = btn.dataset;
                         fetch(`${host}/${data.class}/${data.target}/${data.action}`, {
