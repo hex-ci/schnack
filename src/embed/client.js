@@ -15,10 +15,14 @@ export default class Schnack {
         const url = new URL(options.host);
 
         if (url.hostname !== 'localhost') {
-            document.domain = url.hostname
+            try {
+                document.domain = url.hostname
                 .split('.')
                 .slice(1)
                 .join('.');
+            }
+            catch (error) {
+            }
         }
 
         this.refresh();
@@ -125,10 +129,15 @@ export default class Schnack {
                             form.dataset.reply = btn.dataset.replyTo;
                             cancelReplyBtn.style.display = 'inline-block';
                             btn.parentElement.appendChild(form);
+                            const elBody = form.parentElement.querySelector('.schnack-body');
+                            elBody.style.display = 'block';
                         });
                     });
 
                     cancelReplyBtn.addEventListener('click', () => {
+                        const elBody = form.parentElement.querySelector('.schnack-body');
+                        elBody.style.display = 'block';
+
                         above.appendChild(form);
                         delete form.dataset.reply;
                         delete form.dataset.edit;
@@ -147,15 +156,16 @@ export default class Schnack {
                             })
                                 .then(r => r.json())
                                 .then((res) => {
-                                    const el = btn.parentElement;
-
                                     delete form.dataset.reply;
 
                                     form.dataset.edit = data.target;
                                     textarea.value = res.comment.comment;
                                     cancelReplyBtn.style.display = 'inline-block';
 
-                                    el.insertBefore(form, el.querySelector('.schnack-body').nextSibling);
+                                    const el = btn.parentElement;
+                                    const elBody = el.querySelector('.schnack-body');
+                                    elBody.style.display = 'none';
+                                    el.insertBefore(form, elBody.nextSibling);
                                 });
                         });
                     });
@@ -251,8 +261,10 @@ export default class Schnack {
 
                 if (this.firstLoad && window.location.hash.match(/^#comment-\d+$/)) {
                     const hl = document.querySelector(window.location.hash);
-                    hl.scrollIntoView();
-                    hl.classList.add('schnack-highlight');
+                    if (hl) {
+                        hl.scrollIntoView();
+                        hl.classList.add('schnack-highlight');
+                    }
                     this.firstLoad = false;
                 }
             });
