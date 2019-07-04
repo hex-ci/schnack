@@ -146,6 +146,11 @@ export default class Schnack {
 
                     editBtns.forEach(btn => {
                         btn.addEventListener('click', () => {
+                            const elBody = form.parentElement.querySelector('.schnack-body');
+                            if (elBody) {
+                                elBody.style.display = 'block';
+                            }
+
                             const data = btn.dataset;
                             fetch(`${host}/get_comment/${data.target}`, {
                                 credentials: 'include',
