@@ -150,6 +150,9 @@ export default class Schnack {
                             if (elBody) {
                                 elBody.style.display = 'block';
                             }
+                            previewBtn.style.display = 'inline';
+                            preview.style.display = 'none';
+                            writeBtn.style.display = 'none';
 
                             const data = btn.dataset;
                             fetch(`${host}/get_comment/${data.target}`, {
