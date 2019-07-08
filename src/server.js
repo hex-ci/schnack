@@ -29,10 +29,15 @@ const awaiting_moderation = [];
 marked.setOptions({
     sanitize: true,
     highlight(code, lang) {
-        if (lang) {
-            return highlight.highlight(lang, code, false).value;
+        try {
+            if (lang) {
+                return highlight.highlight(lang, code, false).value;
+            }
+            else {
+                return highlight.highlightAuto(code).value;
+            }
         }
-        else {
+        catch (error) {
             return highlight.highlightAuto(code).value;
         }
     }
