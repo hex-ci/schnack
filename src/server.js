@@ -6,6 +6,7 @@ const moment = require('moment');
 
 const RSS = require('rss');
 const marked = require('marked');
+const highlight = require('highlight.js');
 
 const dbHandler = require('./db');
 const queries = require('./db/queries');
@@ -25,7 +26,17 @@ const config = require('./config');
 
 const awaiting_moderation = [];
 
-marked.setOptions({ sanitize: true });
+marked.setOptions({
+    sanitize: true,
+    highlight(code, lang) {
+        if (lang) {
+            return highlight.highlight(lang, code, false).value;
+        }
+        else {
+            return highlight.highlightAuto(code).value;
+        }
+    }
+});
 
 dbHandler
     .init()
