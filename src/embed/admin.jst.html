@@ -9,7 +9,9 @@
   <% data.comments.forEach((comment) => { %>
     <li>
       <% if (comment.slug.indexOf('userguide3/') === 0) { %>
-      <a href="https://codeigniter.org.cn/<%=comment.slug.replace('userguide3/', 'user_guide/')%>.html" target="_blank"><%=comment.slug%></a>: <%=comment.count%>
+        <a href="https://codeigniter.org.cn/<%=comment.slug.replace('userguide3/', 'user_guide/')%>.html" target="_blank"><%=comment.slug%></a>: <%=comment.count%>
+      <% } else { %>
+        <%=comment.slug%>: <%=comment.count%>
       <% } %>
     </li>
   <% }) %>
