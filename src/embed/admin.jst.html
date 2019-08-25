@@ -1,0 +1,16 @@
+<% if (data.user) { %>
+<div class="schnack-login-status">
+  (已登录为 <span class="schnack-user"><%=data.user.name%></span>)
+</div>
+<% } %>
+</div>
+
+<ul class="schnack-comments">
+  <% data.comments.forEach((comment) => { %>
+    <li>
+      <% if (comment.slug.indexOf('userguide3/') === 0) { %>
+      <a href="https://codeigniter.org.cn/<%=comment.slug.replace('userguide3/', 'user_guide/')%>.html" target="_blank"><%=comment.slug%></a>: <%=comment.count%>
+      <% } %>
+    </li>
+  <% }) %>
+</ul>

@@ -31,4 +31,12 @@ export default [{
         name: 'Schnack'
     },
     plugins
+}, {
+  input: 'src/embed/admin.js',
+  output: {
+      file: 'build/admin.js',
+      format: 'umd',
+      name: 'SchnackAdmin'
+  },
+  plugins
 }];

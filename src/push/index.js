@@ -89,6 +89,7 @@ function init(app, db, awaiting_moderation) {
     // serve static js files
     app.use('/embed.js', send_file('build/embed.js'));
     app.use('/client.js', send_file('build/client.js'));
+    app.use('/admin.js', send_file('build/admin.js'));
     app.use(
         '/push.js',
         send_string(
