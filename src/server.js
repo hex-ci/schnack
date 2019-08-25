@@ -217,6 +217,16 @@ function run(db) {
         });
     });
 
+    app.get('/get_newer', (request, reply) => {
+        const user = getUser(request);
+        if (!isAdmin(user)) return reply.status(403).send({ error: 'Forbidden' });
+        user.admin = true;
+        db.all(queries.admin_get_newer_comments, (err, comments) => {
+            if (error(err, request, reply)) return;
+            reply.send({ user, comments });
+        });
+    });
+
     if (config.get('dev')) {
         // create dev user for testing purposes
         db.run(
