@@ -17,8 +17,9 @@ module.exports = {
         AND NOT comment.rejected
       ORDER BY comment.created_at DESC`,
 
-    admin_get_newer_comments: `SELECT *, count(id) as count FROM comment
-      WHERE NOT rejected AND NOT approved
+    admin_get_newer_comments: `SELECT *, count(comment.id) as count
+      FROM comment INNER JOIN user ON (user_id=user.id)
+      WHERE NOT comment.rejected AND NOT comment.approved AND NOT user.trusted
       GROUP BY slug
       ORDER BY created_at DESC`,
 
