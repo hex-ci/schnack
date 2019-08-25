@@ -31,7 +31,12 @@ marked.setOptions({
     highlight(code, lang) {
         try {
             if (lang) {
-                return highlight.highlight(lang, code, false).value;
+                if (lang === 'text') {
+                    return code;
+                }
+                else {
+                    return highlight.highlight(lang, code, false).value;
+                }
             }
             else {
                 return highlight.highlightAuto(code).value;
